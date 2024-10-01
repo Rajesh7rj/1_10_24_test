@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
@@ -15,6 +15,7 @@ import {
   TextareaAutosize,
   FormControl,
   Container,
+  Typography,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { addParticipant, participantsListData } from '../store/participantsSlice';
@@ -39,7 +40,7 @@ const formSchema = Yup.object().shape({
   firstName: Yup.string().required('First name is required'),
   lastName: Yup.string().required('Last name is required'),
   email: Yup.string().email('Invalid email format').required('Email is required'),
-  phone: Yup.string().required('Phone number is required'),
+  phone: Yup.string().matches(/^\d{10}$/, 'Phone number must be 10 digits').required('Phone number is required'),
   attending: Yup
   .string()
   .oneOf(['Yes', 'Maybe', 'No']) 
@@ -57,7 +58,7 @@ const RegistrationForm: React.FC = () => {
   const dispatch = useDispatch();
   const participantsList = useSelector(participantsListData);
  
-  const { control, handleSubmit, watch } = useForm<RegistrationFormData>({
+  const { control, handleSubmit, watch, reset } = useForm<RegistrationFormData>({
     resolver: yupResolver(formSchema),
     defaultValues: {
       firstName: '',          
@@ -65,7 +66,7 @@ const RegistrationForm: React.FC = () => {
       email: '',              
       phone: '',              
       attending: 'Yes',       
-      adults: 1,              
+      adults: 0,              
       kids: 0,                
       kidsAges: Array(5).fill(null),
       message: '',            
@@ -73,9 +74,15 @@ const RegistrationForm: React.FC = () => {
     },
   });
 
+  const [submitForm, setSubmitForm] = useState<boolean>(false);
+
   const onSubmit = (data: RegistrationFormData) => {
-    console.log(data);
     dispatch(addParticipant(data)); 
+    reset();
+    setSubmitForm(true)
+    setTimeout(()=>{
+      setSubmitForm(false)
+    },2000)
   };
 
   const kidsCount = watch('kids');
@@ -83,7 +90,7 @@ const RegistrationForm: React.FC = () => {
   return (
     <><Header />
     <Container>
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ maxWidth: 600, mx: 'auto', mt: "100px" }}>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ maxWidth: 600, mx: 'auto', mt: "100px" , mb:3}}>
       <h2>Registration Form</h2>
 
       <Controller
@@ -174,7 +181,7 @@ const RegistrationForm: React.FC = () => {
         render={({ field, fieldState }) => (
           <FormControl fullWidth margin="normal" error={!!fieldState.error}>
             <InputLabel>Adults</InputLabel>
-            <Select {...field}>
+            <Select {...field} label="adults">
               {[...Array(6).keys()].map((value) => (
                 <MenuItem key={value} value={value}>
                   {value}
@@ -191,7 +198,7 @@ const RegistrationForm: React.FC = () => {
         render={({ field, fieldState }) => (
           <FormControl fullWidth margin="normal" error={!!fieldState.error}>
             <InputLabel>Kids</InputLabel>
-            <Select {...field}>
+            <Select {...field} label="Kids">
               {[...Array(6).keys()].map((value) => (
                 <MenuItem key={value} value={value}>
                   {value}
@@ -210,7 +217,7 @@ const RegistrationForm: React.FC = () => {
           render={({ field, fieldState }) => (
             <FormControl fullWidth margin="normal" error={!!fieldState.error}>
               <InputLabel>Age of Kid {index + 1}</InputLabel>
-              <Select {...field}>
+              <Select {...field} label={`Age of Kid ${index + 1}`}>
                 {[...Array(18).keys()].map((value) => (
                   <MenuItem key={value} value={value}>
                     {value}
@@ -229,12 +236,13 @@ const RegistrationForm: React.FC = () => {
           <TextareaAutosize
             {...field}
             placeholder="Send a message to the host (optional)"
-            style={{ width: '100%', marginTop: 16, minHeight: 100 }} />
+            style={{ width: '100%', marginTop: 16, minHeight: 100, padding:"12px" }} />
         )} />
-
+    {submitForm && (<Typography color='success' mt={1}>Form submit successfully</Typography>)}
       <Button type="submit" variant="contained" color="primary" sx={{ mt: 3 }}>
         Submit
       </Button>
+     
     </Box>
     </Container>
     </>
