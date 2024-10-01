@@ -9,7 +9,7 @@ import { store } from './store/store';
 const App= () => {
   return (
     <Provider store={store}>
-    <Router>
+    <Router basename="/1_10_24_test">
     <div>
       <Routes>
         <Route path="/" element={<HomePage />} />
